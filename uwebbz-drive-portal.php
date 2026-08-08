@@ -59,7 +59,10 @@ final class UWEBBZ_Drive_Portal {
 
     public static function redirect_uri() {
         // Keep this stable. It must exactly match the URI registered in Google Cloud.
-        return admin_url('admin.php?page=uld');
+        // Force https explicitly: Google rejects non-https redirect URIs, and the
+        // 'admin' scheme falls back to is_ssl(), which misreports http behind
+        // reverse proxies/load balancers that don't forward HTTPS detection.
+        return admin_url('admin.php?page=uld', 'https');
     }
 
     private static function configured_scope() {
@@ -99,8 +102,15 @@ final class UWEBBZ_Drive_Portal {
 
         // Google returns ?page=uld&code=...&state=... to the SAME page.
         // Do not require a custom callback query flag; that caused previous integrations to miss the callback.
-        if (isset($_GET['page'], $_GET['code']) && $_GET['page'] === 'uld') {
+        if (isset($_GET['page']) && $_GET['page'] === 'uld' && isset($_GET['code'])) {
             self::finish_oauth();
+        }
+
+        // If the user cancels consent (or Google errors out), it redirects back with
+        // ?error=... and no code. Without this, the settings page silently reloads as
+        // "not connected" with no explanation of what happened.
+        if (isset($_GET['page']) && $_GET['page'] === 'uld' && isset($_GET['error'])) {
+            self::redirect_oauth_error('google_denied', sanitize_text_field(wp_unslash($_GET['error'])));
         }
 
         if (isset($_GET['uld_disconnect_google'])) {
