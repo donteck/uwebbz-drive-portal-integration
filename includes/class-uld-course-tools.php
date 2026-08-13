@@ -1,5 +1,12 @@
 <?php
 if(!defined('ABSPATH'))exit;
+
+// Notifications are part of the unified LMS and load with course tools.
+if(!class_exists('ULD_Notifications')){
+ require_once plugin_dir_path(__FILE__).'class-uld-notifications.php';
+ ULD_Notifications::init();
+}
+
 final class ULD_Course_Tools{
  public static function init(){add_action('add_meta_boxes',[__CLASS__,'boxes']);add_action('save_post_uld_course',[__CLASS__,'save'],20,3);add_filter('post_row_actions',[__CLASS__,'lesson_actions'],10,2);add_action('admin_init',[__CLASS__,'duplicate']);}
  public static function boxes(){add_meta_box('uld_course_drive','Google Drive Course Folder',[__CLASS__,'box'],'uld_course','side','high');}
