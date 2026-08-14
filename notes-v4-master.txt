@@ -1,0 +1,1 @@
+UWEBBZ Drive LMS v4 uses one WordPress plugin entry point: uwebbz-drive-lms.php. Legacy standalone entry files are internal components.
