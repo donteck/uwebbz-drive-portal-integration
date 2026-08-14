@@ -60,6 +60,13 @@ final class ULD_V4_Visual_Workspace {
         return preg_replace('/[^A-Za-z0-9_-]/','',$raw);
     }
 
+    private static function nav_url($folder){
+        $args=['page'=>'uld-drive-browser','folder'=>$folder];
+        $root=(string)get_option(self::ROOT_OPTION);
+        if($folder && $folder!==$root) $args['_uldnav']=wp_create_nonce('uld_nav_'.$folder);
+        return add_query_arg($args,admin_url('admin.php'));
+    }
+
     public static function actions(){
         if(!is_admin()||!current_user_can('manage_options')) return;
         if(isset($_POST['uld_set_workspace_root'])){
@@ -89,7 +96,8 @@ final class ULD_V4_Visual_Workspace {
                     update_post_meta($target,'uld_drive_folder_name',$drive_name);
                 }
             }
-            wp_safe_redirect(add_query_arg(['page'=>'uld-drive-browser','folder'=>sanitize_text_field(wp_unslash($_POST['return_folder']??'')),'uld_notice'=>'assigned'],admin_url('admin.php'))); exit;
+            $return=sanitize_text_field(wp_unslash($_POST['return_folder']??''));
+            wp_safe_redirect(add_query_arg('uld_notice','assigned',self::nav_url($return?:get_option(self::ROOT_OPTION)))); exit;
         }
     }
 
@@ -114,7 +122,9 @@ final class ULD_V4_Visual_Workspace {
         $folder=sanitize_text_field(wp_unslash($_GET['folder']??$root)); if(!$folder)$folder=$root;
         $data=self::list_folder($folder);
         echo '<div class="wrap uld-wrap"><div class="uld-hero"><div><span class="uld-kicker">UWEBBZ TECHNOLOGY</span><h1>'.esc_html($root_name).'</h1><p>Your protected LMS workspace. Only content inside the selected Drive folder is presented here.</p></div><div class="uld-status is-connected"><span class="uld-dot"></span>Restricted Workspace</div></div>';
-        echo '<div class="uld-v4-toolbar"><a class="button button-primary" href="'.esc_url(admin_url('admin.php?page=uld-drive-browser')).'">Workspace Home</a><a class="button" href="'.esc_url(admin_url('admin.php?page=uld-drive-workspace')).'">Change Root Folder</a><a class="button" href="'.esc_url(add_query_arg(['page'=>'uld-drive-browser','folder'=>$folder],admin_url('admin.php'))).'">Refresh</a></div>';
+        if(isset($_GET['uld_notice'])&&sanitize_key($_GET['uld_notice'])==='outside_workspace_blocked') echo '<div class="notice notice-warning"><p>Navigation outside the selected LMS Drive folder was blocked.</p></div>';
+        if(isset($_GET['uld_notice'])&&sanitize_key($_GET['uld_notice'])==='assigned') echo '<div class="notice notice-success is-dismissible"><p>Assignment saved.</p></div>';
+        echo '<div class="uld-v4-toolbar"><a class="button button-primary" href="'.esc_url(self::nav_url($root)).'">Workspace Home</a><a class="button" href="'.esc_url(admin_url('admin.php?page=uld-drive-workspace')).'">Change Root Folder</a><a class="button" href="'.esc_url(self::nav_url($folder)).'">Refresh</a></div>';
         if(is_wp_error($data)){ echo '<div class="notice notice-error"><p>'.esc_html($data->get_error_message()).'</p></div></div>'; return; }
         $files=$data['files']??[];
         if(!$files){ echo '<div class="uld-empty"><h2>This folder is empty</h2><p>Add course materials to the selected Google Drive folder and click Refresh.</p></div></div>'; return; }
@@ -124,7 +134,7 @@ final class ULD_V4_Visual_Workspace {
     private static function card($f,$folder){
         $id=$f['id']??''; $name=$f['name']??'Untitled'; $mime=$f['mimeType']??''; $is_folder=$mime==='application/vnd.google-apps.folder';
         echo '<article class="uld-v4-file"><div class="uld-v4-file-top"><span class="dashicons '.($is_folder?'dashicons-category':'dashicons-media-document').'"></span><div><small>'.esc_html($is_folder?'Folder':'Learning Resource').'</small><h3>'.esc_html($name).'</h3></div></div><div class="uld-v4-actions">';
-        if($is_folder) echo '<a class="button button-primary" href="'.esc_url(add_query_arg(['page'=>'uld-drive-browser','folder'=>$id],admin_url('admin.php'))).'">Open Folder</a>';
+        if($is_folder) echo '<a class="button button-primary" href="'.esc_url(self::nav_url($id)).'">Open Folder</a>';
         elseif(!empty($f['webViewLink'])) echo '<a class="button button-primary" target="_blank" rel="noopener" href="'.esc_url($f['webViewLink']).'">Preview</a>';
         echo '<button type="button" class="button uld-v4-toggle" data-target="assign-'.esc_attr($id).'">Assign</button></div>';
         echo '<div id="assign-'.esc_attr($id).'" class="uld-v4-assign-panel" hidden>'; self::visual_assigner($id,$name,$folder,$is_folder); echo '</div></article>';
