@@ -17,6 +17,7 @@ if (!defined('ULD_LMS_FILE')) define('ULD_LMS_FILE', __FILE__);
 require_once ULD_LMS_DIR . 'includes/core-v4.php';
 require_once ULD_LMS_DIR . 'includes/class-uld-v4-navigation-guard.php';
 require_once ULD_LMS_DIR . 'includes/class-uld-v4-visual-workspace.php';
+require_once ULD_LMS_DIR . 'includes/class-uld-v4-visual-enrollment.php';
 
 add_action('admin_enqueue_scripts', function($hook){
     if (strpos((string)$hook,'uld')!==false) {
