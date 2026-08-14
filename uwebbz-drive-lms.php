@@ -14,7 +14,7 @@ if (!defined('ULD_LMS_DIR')) define('ULD_LMS_DIR', plugin_dir_path(__FILE__));
 if (!defined('ULD_LMS_URL')) define('ULD_LMS_URL', plugin_dir_url(__FILE__));
 if (!defined('ULD_LMS_FILE')) define('ULD_LMS_FILE', __FILE__);
 
-require_once ULD_LMS_DIR . 'includes/uwebbz-drive-lms-core.inc';
+require_once ULD_LMS_DIR . 'includes/core-v4.php';
 
 register_activation_hook(__FILE__, function(){
     if (!get_option('uld_portal_refresh_seconds')) update_option('uld_portal_refresh_seconds', 30);
