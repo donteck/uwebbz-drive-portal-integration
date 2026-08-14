@@ -2,7 +2,15 @@
 if (!defined('ABSPATH')) exit;
 
 final class ULD_V4_Visual_Enrollment {
-    public static function init(){ add_action('admin_menu',[__CLASS__,'menu'],100); }
+    public static function init(){
+        add_action('admin_menu',[__CLASS__,'menu'],100);
+        add_action('admin_enqueue_scripts',[__CLASS__,'assets'],100);
+    }
+    public static function assets($hook){
+        if(strpos((string)$hook,'uld')!==false){
+            wp_enqueue_style('uld-v4-enrollment',ULD_LMS_URL.'assets/v4-enrollment.css',['uld-teacher-ui'],ULD_LMS_VERSION);
+        }
+    }
     public static function menu(){
         remove_submenu_page('uld','uld-assignments');
         add_submenu_page('uld','Students & Enrollments','Enrollments','manage_options','uld-assignments',[__CLASS__,'page']);
